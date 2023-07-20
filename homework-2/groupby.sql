@@ -3,7 +3,7 @@
 SELECT ship_city, ship_country FROM orders WHERE ship_city LIKE '%burg' GROUP BY ship_city, ship_country;
 
 -- 2. из таблицы orders идентификатор заказа, идентификатор заказчика, вес и страну отгрузки. Заказ отгружен в страны, начинающиеся на 'P'. Результат отсортирован по весу (по убыванию). Вывести первые 10 записей.
-SELECT order_id,customer_id,freight,ship_country FROM  orders WHERE ship_country LIKE 'P%' GROUP BY order_id,customer_id,freight,ship_country ORDER BY order_id DESC LIMIT 10;
+SELECT order_id,customer_id,freight,ship_country FROM  orders WHERE ship_country LIKE 'P%' GROUP BY order_id,customer_id,freight,ship_country ORDER BY freight  DESC LIMIT 10;
 
 -- 3. фамилию, имя и телефон сотрудников, у которых в данных отсутствует регион (см таблицу employees)
 SELECT last_name,first_name,home_phone from employees WHERE region is NULL GROUP BY last_name,first_name,home_phone
@@ -18,14 +18,12 @@ SELECT ship_country, SUM(freight) AS total_weight FROM orders WHERE ship_region 
 -- 6. страны, в которых зарегистрированы и заказчики (customers) и поставщики (suppliers) и работники (employees).
 SELECT country
 FROM (
-  SELECT country FROM customers
-  UNION
-  SELECT country FROM suppliers
-  UNION
-  SELECT country FROM employees
-) AS combined_table
-GROUP BY country
-HAVING COUNT(DISTINCT country) = 3;
+  (SELECT country FROM customers)
+  INTERSECT
+  (SELECT country FROM suppliers)
+  INTERSECT
+  (SELECT country FROM employees)
+) AS combined_table;
 
 -- 7. страны, в которых зарегистрированы и заказчики (customers) и поставщики (suppliers), но не зарегистрированы работники (employees).
 SELECT country
@@ -33,6 +31,9 @@ FROM customers
 WHERE country IN (
   SELECT country FROM suppliers
 )
-AND country NOT IN (
+INTERSECT
+SELECT country
+FROM customers
+WHERE country NOT IN (
   SELECT country FROM employees
 );
